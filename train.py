@@ -9,6 +9,8 @@ from torchvision import datasets
 from torch.utils.data import DataLoader
 from torchvision import transforms
 from metrics_track import AverageMeter, ProgressMeter
+from model_arch import ResNet18, ResNet34, ResNet50, ResNet101, ResNet152
+from torch.optim.lr_scheduler import MultiStepLR
 
 
 #TODOS
@@ -95,19 +97,21 @@ def load_imagenet_dataset(args):
 def load_cifar10_dataset(args):
 
     transform_train = transforms.Compose([
+    transforms.Resize((224,224)),
     transforms.RandomHorizontalFlip(),
     transforms.ToTensor(),
     transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
     ])
 
     transform_val = transforms.Compose([
+        transforms.Resize((224,224)),
         transforms.ToTensor(),
         transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
     ])
 
 
-    cifar_train_data = torchvision.dataset.CIFAR10('./cifar10_dataset',transforms=transform_train,download=True)
-    cifar_val_data = torchvision.dataset.CIFAR10('./cifar10_dataset',transforms=transform_val,download=True)
+    cifar_train_data = torchvision.datasets.CIFAR10('./cifar10_dataset',transform=transform_train,download=True)
+    cifar_val_data = torchvision.datasets.CIFAR10('./cifar10_dataset',transform=transform_val,download=True)
 
 
 
@@ -128,7 +132,8 @@ def get_args():
     parser.add_argument('--arch',type=str,help='choice of ResNet50, ResNet18, ResNet34, Resnet101, ResNet152')
     parser.add_argument('--lr',type=float,default=0.1,help='learning rate')
     parser.add_argument('--weight_decay',type=float,default=1e-4,help='weight decay to use')
-    args = parser.parser_args()
+    parser.add_argument('--momentum',type=float,default=0.9,help='momentum to use')
+    args = parser.parse_args()
     return args
 
 def get_dataset(args):
@@ -141,7 +146,7 @@ def get_dataset(args):
 
 def get_model(args):
     num_classes = None
-    if args.dataset == 'cifar10'
+    if args.dataset == 'cifar10':
         num_classes = 10
     if args.dataset == 'imagenet':
         num_classes = 1000
@@ -171,7 +176,7 @@ def train(model,train_dataset,optimizer,scheduler,loss_function):
 
     model.train()
 
-    for images, target in enumerate(train_dataset):
+    for i,(images, target) in enumerate(train_dataset):
 
         optimizer.zero_grad()
         output = model(images)
@@ -201,8 +206,8 @@ def validate(model,val_dataset):
     # switch to evaluate mode
     model.eval()
 
-    with torch.no_grad()
-        for images, label in enumerate(val_dataset):
+    with torch.no_grad():
+        for i, (images, label) in enumerate(val_dataset):
             output = model(images)
             loss = loss_function(output,label)
 
@@ -223,19 +228,21 @@ def main():
     model = get_model(args)
 
     # setup optimizer
-    optimizer = torch.optim.SGD(model.parameters(),lr=args.lr,momentum=args.momentum)
+    optimizer = torch.optim.SGD(model.parameters(),lr=args.lr,momentum=args.momentum,weight_decay=args.weight_decay)
 
     # setup loss function
     loss_function = torch.nn.CrossEntropyLoss().cuda()
 
     # scheduler to use , should be able to use it on cifar as well.
-    scheduler = MultiStepLR(optimizer,milestones[30,60,80],gamma=0.1)
+    scheduler = MultiStepLR(optimizer,milestones=[30,60,80],gamma=0.1)
 
 
     if torch.cuda.is_available():
         device = torch.device('cuda:0')
         model.to(device)
         loss_function.to(device)
+        train_dataset.to(device)
+        val_dataset.to(device)
 
 
     num_epochs = args.num_epochs
@@ -267,6 +274,8 @@ def main():
     plot_graphs(args,track_train_acc,track_val_top1_acc,track_val_top5_acc,track_val_loss,track_train_loss)
 
     # store checkpoint
+    
+    
 
 if __name__ == '__main__':
     main()
