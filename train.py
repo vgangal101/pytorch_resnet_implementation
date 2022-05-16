@@ -20,7 +20,7 @@ from metrics_track import AverageMeter, ProgressMeter
 #6. Write distributed appraoch to train imagenet on 4 gpus
 
 
-def plot_train(args,track_train_acc,track_val_top1_acc,track_val_top5_acc,track_val_loss,track_train_loss):
+def plot_graphs(args,track_train_acc,track_val_top1_acc,track_val_top5_acc,track_val_loss,track_train_loss):
 
     accuracy = track_train_acc
     val_accuracy = track_val_top1_acc
@@ -92,9 +92,6 @@ def load_imagenet_dataset(args):
     return imgnt_train_data,imgnt_val_data
 
 
-
-
-
 def load_cifar10_dataset(args):
 
     transform_train = transforms.Compose([
@@ -138,20 +135,27 @@ def get_dataset(args):
     if args.dataset.lower() == 'cifar10':
         return load_cifar10_dataset(args)
     elif args.dataset.lower() == 'imagenet':
-        # do imagenet loading
         return load_imagenet_dataset(args)
+    else:
+        raise ValueError("Invalid dataset dataset=",args.dataset)
 
 def get_model(args):
+    num_classes = None
+    if args.dataset == 'cifar10'
+        num_classes = 10
+    if args.dataset == 'imagenet':
+        num_classes = 1000
+
     if args.model == 'ResNet18':
-        model = ResNet18()
+        model = ResNet18(num_classes=num_classes)
     elif args.model == 'ResNet34':
-        model = ResNet34()
+        model = ResNet34(num_classes=num_classes)
     elif args.model == 'ResNet50':
-        model = ResNet50()
+        model = ResNet50(num_classes=num_classes)
     elif args.model == 'ResNet101':
-        model = ResNet101()
+        model = ResNet101(num_classes=num_classes)
     elif args.model == 'ResNet152':
-        model == ResNet152()
+        model == ResNet152(num_classes=num_classes)
     else:
         raise ValueError('Did not receive a valid model type, recieved=',args.model)
 
@@ -218,7 +222,6 @@ def main():
     # get the model
     model = get_model(args)
 
-
     # setup optimizer
     optimizer = torch.optim.SGD(model.parameters(),lr=args.lr,momentum=args.momentum)
 
@@ -227,6 +230,12 @@ def main():
 
     # scheduler to use , should be able to use it on cifar as well.
     scheduler = MultiStepLR(optimizer,milestones[30,60,80],gamma=0.1)
+
+
+    if torch.cuda.is_available():
+        device = torch.device('cuda:0')
+        model.to(device)
+        loss_function.to(device)
 
 
     num_epochs = args.num_epochs
@@ -253,9 +262,11 @@ def main():
         print(f'epoch={epoch} train_loss={train_loss} train_acc={train_acc} val_loss={val_loss} val_top1_acc={val_top1_acc} val_top5_acc={val_top5_acc}')
 
     print("training complete")
-    # display metrics
 
     # display graphs
+    plot_graphs(args,track_train_acc,track_val_top1_acc,track_val_top5_acc,track_val_loss,track_train_loss)
+
+    # store checkpoint
 
 if __name__ == '__main__':
     main()
