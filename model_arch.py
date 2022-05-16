@@ -57,7 +57,6 @@ class plain_ResNet18(nn.Module):
         # last layers
         self.global_avg_pool = nn.AvgPool2d((7,7))
         self.fc = nn.Linear(512,1000)
-        self.act_final = nn.Softmax()
 
     def forward(self,x):
 
@@ -83,7 +82,6 @@ class plain_ResNet18(nn.Module):
         out = out.reshape(out.shape[0],-1)
         out = self.fc(out)
 
-        out = self.act_final(out)
 
         return out
 
