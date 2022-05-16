@@ -245,7 +245,7 @@ class BuildingBlockResidual_ConvBlock(nn.Module):
 
 
 class ResNet18(nn.Module):
-  def __init__(self):
+  def __init__(self,num_classes=1000):
     super().__init__()
     # conv layer 1
     self.conv1 = nn.Conv2d(3,64,(7,7),stride=2,padding=3)
@@ -269,7 +269,7 @@ class ResNet18(nn.Module):
 
     # last layers
     self.global_avg_pool = nn.AvgPool2d((7,7))
-    self.fc = nn.Linear(512,1000)
+    self.fc = nn.Linear(512,num_classes)
     self.act_final = nn.Softmax()
 
     torch.nn.init.kaiming_normal_(self.conv1.weight, mode='fan_out', nonlinearity='relu')
@@ -312,7 +312,7 @@ class ResNet18(nn.Module):
     return out
 
 class ResNet34(nn.Module):
-  def __init__(self):
+  def __init__(self, num_classes=1000):
     super().__init__()
     # conv layer 1
     self.conv1 = nn.Conv2d(3,64,(7,7),stride=2,padding=3)
@@ -345,7 +345,7 @@ class ResNet34(nn.Module):
 
     # last layers
     self.global_avg_pool = nn.AvgPool2d((7,7))
-    self.fc = nn.Linear(512,1000)
+    self.fc = nn.Linear(512,num_classes)
     self.act_final = nn.Softmax()
 
     torch.nn.init.kaiming_normal_(self.conv1.weight, mode='fan_out', nonlinearity='relu')
@@ -506,7 +506,7 @@ class BottleNeckBlock_Conv(nn.Module):
 
 
 class ResNet50(nn.Module):
-  def __init__(self):
+  def __init__(self,num_classes=1000):
     super().__init__()
     # conv layer 1
     self.conv1 = nn.Conv2d(3,64,(7,7),stride=2,padding=3)
@@ -538,7 +538,7 @@ class ResNet50(nn.Module):
 
     # last layers
     self.global_avg_pool = nn.AvgPool2d((7,7))
-    self.fc = nn.Linear(2048,1000)
+    self.fc = nn.Linear(2048,num_classes)
     self.act_final = nn.Softmax()
 
     torch.nn.init.kaiming_normal_(self.conv1.weight, mode='fan_out', nonlinearity='relu')
@@ -590,7 +590,7 @@ class ResNet50(nn.Module):
     return out
 
 class ResNet101(nn.Module):
-  def __init__(self):
+  def __init__(self,num_classes=1000):
     super().__init__()
     # conv layer 1
     self.conv1 = nn.Conv2d(3,64,(7,7),stride=2,padding=3)
@@ -639,7 +639,7 @@ class ResNet101(nn.Module):
 
     # last layers
     self.global_avg_pool = nn.AvgPool2d((7,7))
-    self.fc = nn.Linear(2048,1000)
+    self.fc = nn.Linear(2048,num_classes)
     self.act_final = nn.Softmax()
 
     torch.nn.init.kaiming_normal_(self.conv1.weight, mode='fan_out', nonlinearity='relu')
@@ -710,7 +710,7 @@ class ResNet101(nn.Module):
 
 
 class ResNet152(nn.Module):
-  def __init__(self):
+  def __init__(self,num_classes=1000):
     super().__init__()
     # conv layer 1
     self.conv1 = nn.Conv2d(3,64,(7,7),stride=2,padding=3)
@@ -772,7 +772,7 @@ class ResNet152(nn.Module):
 
     # last layers
     self.global_avg_pool = nn.AvgPool2d((7,7))
-    self.fc = nn.Linear(2048,1000)
+    self.fc = nn.Linear(2048,num_classes)
     self.act_final = nn.Softmax()
 
     torch.nn.init.kaiming_normal_(self.conv1.weight, mode='fan_out', nonlinearity='relu')
