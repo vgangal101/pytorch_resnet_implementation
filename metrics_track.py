@@ -1,4 +1,5 @@
 import torch
+from enum import Enum
 
 class Summary(Enum):
     NONE = 0
