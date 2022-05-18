@@ -544,8 +544,8 @@ class ResNet50(nn.Module):
 
   def forward(self,x):
         
-        print('input type=',type(x))
-        print('input=',x)
+        #print('input type=',type(x))
+        #print('input=',x)
         #print('input_shape=',x.shape)
         
         out = self.conv1(x)
