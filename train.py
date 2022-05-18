@@ -8,7 +8,7 @@ import torchvision
 from torchvision import datasets
 from torch.utils.data import DataLoader
 from torchvision import transforms
-from metrics_track import AverageMeter, ProgressMeter
+from metrics_track import AverageMeter, ProgressMeter, accuracy, Summary
 from model_arch import ResNet18, ResNet34, ResNet50, ResNet101, ResNet152
 from torch.optim.lr_scheduler import MultiStepLR
 
@@ -20,6 +20,10 @@ from torch.optim.lr_scheduler import MultiStepLR
 #4. Graphs -- DONE , needs checking
 #5. Run on cifar10 first 1 gpu approach [ means by which checking is done]
 #6. Write distributed appraoch to train imagenet on 4 gpus
+
+# check out following resource -- https://towardsdatascience.com/resnets-for-cifar-10-e63e900524e0
+# read this -- https://towardsdatascience.com/understanding-and-visualizing-resnets-442284831be8
+# and this - https://www.kaggle.com/code/kutaykutlu/resnet50-transfer-learning-cifar-10-beginner/notebook
 
 
 def plot_graphs(args,track_train_acc,track_val_top1_acc,track_val_top5_acc,track_val_loss,track_train_loss):
@@ -95,18 +99,18 @@ def load_imagenet_dataset(args):
 
 
 def load_cifar10_dataset(args):
+    # checkout https://github.com/kuangliu/pytorch-cifar/blob/master/models/resnet.py
 
     transform_train = transforms.Compose([
-    transforms.Resize((224,224)),
+    transforms.RandomCrop(32,padding=4),
     transforms.RandomHorizontalFlip(),
     transforms.ToTensor(),
-    transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
+    transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
     ])
 
     transform_val = transforms.Compose([
-        transforms.Resize((224,224)),
         transforms.ToTensor(),
-        transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
+        transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
     ])
 
 
@@ -178,6 +182,10 @@ def train(model,train_dataset,optimizer,scheduler,loss_function):
 
     for i,(images, target) in enumerate(train_dataset):
 
+        if torch.cuda.is_available():
+            images = images.cuda()
+            target = target.cuda()
+        
         optimizer.zero_grad()
         output = model(images)
         loss = loss_function(output,target)
@@ -192,14 +200,14 @@ def train(model,train_dataset,optimizer,scheduler,loss_function):
 
     return losses.avg, top1.avg
 
-def validate(model,val_dataset):
+def validate(model,val_dataset,loss_function):
 
     batch_time = AverageMeter('Time', ':6.3f', Summary.NONE)
     losses = AverageMeter('Loss', ':.4e', Summary.NONE)
     top1 = AverageMeter('Acc@1', ':6.2f', Summary.AVERAGE)
     top5 = AverageMeter('Acc@5', ':6.2f', Summary.AVERAGE)
     progress = ProgressMeter(
-        len(val_loader),
+        len(val_dataset),
         [batch_time, losses, top1, top5],
         prefix='Test: ')
 
@@ -207,11 +215,16 @@ def validate(model,val_dataset):
     model.eval()
 
     with torch.no_grad():
-        for i, (images, label) in enumerate(val_dataset):
-            output = model(images)
-            loss = loss_function(output,label)
+        for i, (images, labels) in enumerate(val_dataset):
+            
+            if torch.cuda.is_available():
+                images = images.cuda()
+                labels = labels.cuda()
+            
+            outputs = model(images)
+            loss = loss_function(outputs,labels)
 
-            acc1, acc5 = accuracy(output, target, topk=(1, 5))
+            acc1, acc5 = accuracy(outputs, labels, topk=(1, 5))
             losses.update(loss.item(),images.size(0))
             top1.update(acc1[0],images.size(0))
             top5.update(acc5[0],images.size(0))
@@ -236,14 +249,10 @@ def main():
     # scheduler to use , should be able to use it on cifar as well.
     scheduler = MultiStepLR(optimizer,milestones=[30,60,80],gamma=0.1)
 
-
     if torch.cuda.is_available():
         device = torch.device('cuda:0')
         model.to(device)
         loss_function.to(device)
-        train_dataset.to(device)
-        val_dataset.to(device)
-
 
     num_epochs = args.num_epochs
 
@@ -255,9 +264,9 @@ def main():
 
     # write training loop
     print('starting training')
-    for _ in range(num_epochs):
+    for epoch in range(num_epochs):
         train_loss, train_acc = train(model,train_dataset,optimizer,scheduler,loss_function)
-        val_loss, val_top1_acc, val_top5_acc = validate(model,val_dataset)
+        val_loss, val_top1_acc, val_top5_acc = validate(model,val_dataset,loss_function)
 
         track_train_loss.append(train_loss)
         track_train_acc.append(train_acc)
@@ -275,6 +284,8 @@ def main():
 
     # store checkpoint
     
+    save_file = args.model + '_' + args.dataset + '.pth'
+    torch.save(model,save_file)
     
 
 if __name__ == '__main__':
