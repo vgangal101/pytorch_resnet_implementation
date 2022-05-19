@@ -534,7 +534,7 @@ class ResNet50(nn.Module):
         self.conv5x_3 = BottleNeckBlock_Identity(2048,[512,512,2048])
 
         # last layers
-        self.global_avg_pool = nn.AvgPool2d((7,7))
+        self.global_avg_pool = nn.AvgPool2d((1,1))
         self.fc = nn.Linear(2048,num_classes)
         self.act_final = nn.Softmax()
 
@@ -549,21 +549,21 @@ class ResNet50(nn.Module):
         #print('input_shape=',x.shape)
         
         out = self.conv1(x)
-        #print('conv1x out=',out.shape)
+        print('conv1x out=',out.shape)
 
         out = self.conv2x_mp(out)
         out = self.conv2x_block1(out)
         out = self.conv2x_block2(out)
 
         out = self.conv2x_block3(out)
-        #print('conv2x out=',out.shape)
+        print('conv2x out=',out.shape)
 
 
         out = self.conv3x_1(out)
         out = self.conv3x_2(out)
         out = self.conv3x_2(out)
         out = self.conv3x_4(out)
-        #print('conv3x out=',out.shape)
+        print('conv3x out=',out.shape)
 
 
         out = self.conv4x_1(out)
@@ -572,18 +572,22 @@ class ResNet50(nn.Module):
         out = self.conv4x_4(out)
         out = self.conv4x_5(out)
         out = self.conv4x_6(out)
-        #print('conv4x out=',out.shape)
+        print('conv4x out=',out.shape)
 
 
         out = self.conv5x_1(out)
         out = self.conv5x_2(out)
         out = self.conv5x_3(out)
-        #print('conv5x out=',out.shape)
+        print('conv5x out=',out.shape)
 
 
         out = self.global_avg_pool(out)
+        print('global out.shape=',out.shape)
         #print('after global avg pool=',out.shape)
-        out = out.reshape(out.shape[0],-1)
+        #out = out.reshape(out.shape[0],-1)
+        #print(out.shape)
+        out = torch.flatten(x)
+        
         out = self.fc(out)
         #print('after fc=',out.shape)
 
