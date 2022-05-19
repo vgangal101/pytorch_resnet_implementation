@@ -9,9 +9,9 @@ from torchvision import datasets
 from torch.utils.data import DataLoader
 from torchvision import transforms
 from metrics_track import AverageMeter, ProgressMeter, accuracy, Summary
-from model_arch import ResNet18, ResNet34, ResNet50, ResNet101, ResNet152
+#from model_arch import ResNet18, ResNet34, ResNet50, ResNet101, ResNet152
 from torch.optim.lr_scheduler import MultiStepLR
-
+from torchvision_resnet import ResNet18, ResNet34, ResNet50, ResNet101, ResNet152
 
 #TODOS
 #1. Write Data Pipeline for cifar10, imagenet -- DONE , needs checking
@@ -155,18 +155,34 @@ def get_model(args):
     if args.dataset == 'imagenet':
         num_classes = 1000
 
+    # if args.model == 'ResNet18':
+    #     model = ResNet18(num_classes=num_classes)
+    # elif args.model == 'ResNet34':
+    #     model = ResNet34(num_classes=num_classes)
+    # elif args.model == 'ResNet50':
+    #     model = ResNet50(num_classes=num_classes)
+    # elif args.model == 'ResNet101':
+    #     model = ResNet101(num_classes=num_classes)
+    # elif args.model == 'ResNet152':
+    #     model == ResNet152(num_classes=num_classes)
+    # else:
+    #     raise ValueError('Did not receive a valid model type, recieved=',args.model)
+
     if args.model == 'ResNet18':
-        model = ResNet18(num_classes=num_classes)
+        model = ResNet18(num_classes)
     elif args.model == 'ResNet34':
-        model = ResNet34(num_classes=num_classes)
+        model = ResNet34(num_classes)
     elif args.model == 'ResNet50':
-        model = ResNet50(num_classes=num_classes)
+        model = ResNet50(num_classes)
     elif args.model == 'ResNet101':
-        model = ResNet101(num_classes=num_classes)
+        model = ResNet101(num_classes)
     elif args.model == 'ResNet152':
-        model == ResNet152(num_classes=num_classes)
+        model == ResNet152(num_classes)
     else:
         raise ValueError('Did not receive a valid model type, recieved=',args.model)
+
+
+
 
     return model
 
@@ -185,7 +201,7 @@ def train(model,train_dataset,optimizer,scheduler,loss_function):
         if torch.cuda.is_available():
             images = images.cuda()
             target = target.cuda()
-        
+
         optimizer.zero_grad()
         output = model(images)
         loss = loss_function(output,target)
@@ -216,11 +232,11 @@ def validate(model,val_dataset,loss_function):
 
     with torch.no_grad():
         for i, (images, labels) in enumerate(val_dataset):
-            
+
             if torch.cuda.is_available():
                 images = images.cuda()
                 labels = labels.cuda()
-            
+
             outputs = model(images)
             loss = loss_function(outputs,labels)
 
@@ -283,10 +299,10 @@ def main():
     plot_graphs(args,track_train_acc,track_val_top1_acc,track_val_top5_acc,track_val_loss,track_train_loss)
 
     # store checkpoint
-    
+
     save_file = args.model + '_' + args.dataset + '.pth'
     torch.save(model,save_file)
-    
+
 
 if __name__ == '__main__':
     main()
