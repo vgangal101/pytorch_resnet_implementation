@@ -1,6 +1,8 @@
 import torch
 import torch.nn as nn
 from torch import Tensor
+import typing 
+from typing import Optional, Type, Callable, Union, List
 
 
 def conv3x3(in_planes: int, out_planes: int, stride: int = 1, groups: int = 1, dilation: int = 1) -> nn.Conv2d:
@@ -145,7 +147,7 @@ class ResNet(nn.Module):
         norm_layer: Optional[Callable[..., nn.Module]] = None,
     ) -> None:
         super().__init__()
-        _log_api_usage_once(self)
+        #_log_api_usage_once(self)
         if norm_layer is None:
             norm_layer = nn.BatchNorm2d
         self._norm_layer = norm_layer

@@ -12,7 +12,7 @@ from metrics_track import AverageMeter, ProgressMeter, accuracy, Summary
 #from model_arch import ResNet18, ResNet34, ResNet50, ResNet101, ResNet152
 from torch.optim.lr_scheduler import MultiStepLR
 from torchvision_resnet import ResNet18, ResNet34, ResNet50, ResNet101, ResNet152
-
+import matplotlib.pyplot as plt
 #TODOS
 #1. Write Data Pipeline for cifar10, imagenet -- DONE , needs checking
 #2. Implement all architectures -- DONE , needs checking
