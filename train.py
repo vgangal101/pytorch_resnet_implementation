@@ -27,7 +27,6 @@ from torch.optim.lr_scheduler import MultiStepLR
 
 
 def plot_graphs(args,track_train_acc,track_val_top1_acc,track_val_top5_acc,track_val_loss,track_train_loss):
-
     accuracy = track_train_acc
     val_accuracy = track_val_top1_acc
     top5_acc = track_val_top5_acc
@@ -185,7 +184,7 @@ def train(model,train_dataset,optimizer,scheduler,loss_function):
         if torch.cuda.is_available():
             images = images.cuda()
             target = target.cuda()
-        
+
         optimizer.zero_grad()
         output = model(images)
         loss = loss_function(output,target)
@@ -216,11 +215,11 @@ def validate(model,val_dataset,loss_function):
 
     with torch.no_grad():
         for i, (images, labels) in enumerate(val_dataset):
-            
+
             if torch.cuda.is_available():
                 images = images.cuda()
                 labels = labels.cuda()
-            
+
             outputs = model(images)
             loss = loss_function(outputs,labels)
 
@@ -283,10 +282,10 @@ def main():
     plot_graphs(args,track_train_acc,track_val_top1_acc,track_val_top5_acc,track_val_loss,track_train_loss)
 
     # store checkpoint
-    
+
     save_file = args.model + '_' + args.dataset + '.pth'
     torch.save(model,save_file)
-    
+
 
 if __name__ == '__main__':
     main()
