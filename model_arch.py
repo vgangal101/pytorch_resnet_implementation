@@ -514,7 +514,7 @@ class ResNet50(nn.Module):
         # conv layer 1
         self.conv1 = nn.Conv2d(3,64,(7,7),stride=2,padding=3)
         self.bn1 = nn.BatchNorm2d(64)
-        self.act1 = nn.Activation('relu')
+        self.act1 = nn.ReLU()
 
         # conv layer 2x
         self.conv2x_mp = nn.MaxPool2d((3,3),stride=2,padding=1)
@@ -566,14 +566,14 @@ class ResNet50(nn.Module):
         out = self.conv2x_block2(out)
 
         out = self.conv2x_block3(out)
-        print('conv2x out=',out.shape)
+        #print('conv2x out=',out.shape)
 
 
         out = self.conv3x_1(out)
         out = self.conv3x_2(out)
         out = self.conv3x_2(out)
         out = self.conv3x_4(out)
-        print('conv3x out=',out.shape)
+        #print('conv3x out=',out.shape)
 
 
         out = self.conv4x_1(out)
@@ -582,18 +582,21 @@ class ResNet50(nn.Module):
         out = self.conv4x_4(out)
         out = self.conv4x_5(out)
         out = self.conv4x_6(out)
-        print('conv4x out=',out.shape)
+        #print('conv4x out=',out.shape)
 
 
         out = self.conv5x_1(out)
         out = self.conv5x_2(out)
         out = self.conv5x_3(out)
-        print('conv5x out=',out.shape)
+        #print('conv5x out=',out.shape)
 
 
         out = self.global_avg_pool(out)
-        print('global out.shape=',out.shape)
+        #print('global out.shape=',out.shape)
         #print('after global avg pool=',out.shape)
+        
+        out = torch.flatten(out,1)
+        
         out = self.fc(out)
         #print('after fc=',out.shape)
 
