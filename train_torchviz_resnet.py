@@ -13,6 +13,9 @@ from metrics_track import AverageMeter, ProgressMeter, accuracy, Summary
 from torch.optim.lr_scheduler import MultiStepLR
 from torchvision_resnet import ResNet18, ResNet34, ResNet50, ResNet101, ResNet152
 import matplotlib.pyplot as plt
+import logging
+import datetime
+
 #TODOS
 #1. Write Data Pipeline for cifar10, imagenet -- DONE , needs checking
 #2. Implement all architectures -- DONE , needs checking
@@ -249,7 +252,13 @@ def validate(model,val_dataset,loss_function):
 
 def main():
     args = get_args()
-
+    
+    filename = f'train_log--model={args.model},dataset={args.dataset},date={datetime.datetime.now()}'
+    
+    logging.basicConfig(level=logging.INFO,filename=filename)
+    
+    
+    
     # get dataset(s)
     train_dataset, val_dataset = get_dataset(args)
 
@@ -284,14 +293,15 @@ def main():
         train_loss, train_acc = train(model,train_dataset,optimizer,scheduler,loss_function)
         val_loss, val_top1_acc, val_top5_acc = validate(model,val_dataset,loss_function)
 
-        track_train_loss.append(train_loss)
-        track_train_acc.append(train_acc)
-        track_val_loss.append(val_loss)
-        track_val_top1_acc.append(val_top1_acc)
-        track_val_top5_acc.append(val_top5_acc)
+        track_train_loss.append(train_loss.cpu())
+        track_train_acc.append(train_acc.cpu())
+        track_val_loss.append(val_loss.cpu())
+        track_val_top1_acc.append(val_top1_acc.cpu())
+        track_val_top5_acc.append(val_top5_acc.cpu())
 
         scheduler.step()
         print(f'epoch={epoch} train_loss={train_loss} train_acc={train_acc} val_loss={val_loss} val_top1_acc={val_top1_acc} val_top5_acc={val_top5_acc}')
+        logging.info(f'epoch={epoch} train_loss={train_loss} train_acc={train_acc} val_loss={val_loss} val_top1_acc={val_top1_acc} val_top5_acc={val_top5_acc}')
 
     print("training complete")
 
