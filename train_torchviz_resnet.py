@@ -183,11 +183,14 @@ def get_model(args):
         model == ResNet152(num_classes)
     else:
         raise ValueError('Did not receive a valid model type, recieved=',args.model)
-
-
-
-
     return model
+
+
+def process_vals(x):
+    if isinstance(x,torch.Tensor):
+        return x.cpu().detach().item()
+    else:
+        return x
 
 
 def train(model,train_dataset,optimizer,scheduler,loss_function):
@@ -293,11 +296,11 @@ def main():
         train_loss, train_acc = train(model,train_dataset,optimizer,scheduler,loss_function)
         val_loss, val_top1_acc, val_top5_acc = validate(model,val_dataset,loss_function)
 
-        track_train_loss.append(train_loss.cpu())
-        track_train_acc.append(train_acc.cpu())
-        track_val_loss.append(val_loss.cpu())
-        track_val_top1_acc.append(val_top1_acc.cpu())
-        track_val_top5_acc.append(val_top5_acc.cpu())
+        track_train_loss.append(process_vals(train_loss))
+        track_train_acc.append(process_vals(train_acc))
+        track_val_loss.append(process_vals(val_loss))
+        track_val_top1_acc.append(process_vals(val_top1_acc))
+        track_val_top5_acc.append(process_vals(val_top5_acc))
 
         scheduler.step()
         print(f'epoch={epoch} train_loss={train_loss} train_acc={train_acc} val_loss={val_loss} val_top1_acc={val_top1_acc} val_top5_acc={val_top5_acc}')
