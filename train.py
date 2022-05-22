@@ -11,7 +11,10 @@ from torchvision import transforms
 from metrics_track import AverageMeter, ProgressMeter, accuracy, Summary
 from model_arch import ResNet18, ResNet34, ResNet50, ResNet101, ResNet152
 from torch.optim.lr_scheduler import MultiStepLR
-
+#from torchvision_resnet import ResNet18, ResNet34, ResNet50, ResNet101, ResNet152
+import matplotlib.pyplot as plt
+import logging
+import datetime
 
 #TODOS
 #1. Write Data Pipeline for cifar10, imagenet -- DONE , needs checking
@@ -27,6 +30,7 @@ from torch.optim.lr_scheduler import MultiStepLR
 
 
 def plot_graphs(args,track_train_acc,track_val_top1_acc,track_val_top5_acc,track_val_loss,track_train_loss):
+
     accuracy = track_train_acc
     val_accuracy = track_val_top1_acc
     top5_acc = track_val_top5_acc
@@ -167,7 +171,26 @@ def get_model(args):
     else:
         raise ValueError('Did not receive a valid model type, recieved=',args.model)
 
-    return model
+    # if args.model == 'ResNet18':
+    #     model = ResNet18(num_classes)
+    # elif args.model == 'ResNet34':
+    #     model = ResNet34(num_classes)
+    # elif args.model == 'ResNet50':
+    #     model = ResNet50(num_classes)
+    # elif args.model == 'ResNet101':
+    #     model = ResNet101(num_classes)
+    # elif args.model == 'ResNet152':
+    #     model == ResNet152(num_classes)
+    # else:
+    #     raise ValueError('Did not receive a valid model type, recieved=',args.model)
+    # return model
+
+
+def process_vals(x):
+    if isinstance(x,torch.Tensor):
+        return x.cpu().detach().item()
+    else:
+        return x
 
 
 def train(model,train_dataset,optimizer,scheduler,loss_function):
@@ -233,6 +256,12 @@ def validate(model,val_dataset,loss_function):
 def main():
     args = get_args()
 
+    filename = f'train_log--model={args.model},dataset={args.dataset},date={datetime.datetime.now()}'
+
+    logging.basicConfig(level=logging.INFO,filename=filename)
+
+
+
     # get dataset(s)
     train_dataset, val_dataset = get_dataset(args)
 
@@ -267,14 +296,15 @@ def main():
         train_loss, train_acc = train(model,train_dataset,optimizer,scheduler,loss_function)
         val_loss, val_top1_acc, val_top5_acc = validate(model,val_dataset,loss_function)
 
-        track_train_loss.append(train_loss)
-        track_train_acc.append(train_acc)
-        track_val_loss.append(val_loss)
-        track_val_top1_acc.append(val_top1_acc)
-        track_val_top5_acc.append(val_top5_acc)
+        track_train_loss.append(process_vals(train_loss))
+        track_train_acc.append(process_vals(train_acc))
+        track_val_loss.append(process_vals(val_loss))
+        track_val_top1_acc.append(process_vals(val_top1_acc))
+        track_val_top5_acc.append(process_vals(val_top5_acc))
 
         scheduler.step()
         print(f'epoch={epoch} train_loss={train_loss} train_acc={train_acc} val_loss={val_loss} val_top1_acc={val_top1_acc} val_top5_acc={val_top5_acc}')
+        logging.info(f'epoch={epoch} train_loss={train_loss} train_acc={train_acc} val_loss={val_loss} val_top1_acc={val_top1_acc} val_top5_acc={val_top5_acc}')
 
     print("training complete")
 
