@@ -183,7 +183,8 @@ def get_model(args):
     #     model == ResNet152(num_classes)
     # else:
     #     raise ValueError('Did not receive a valid model type, recieved=',args.model)
-    # return model
+    
+    return model
 
 
 def process_vals(x):

@@ -136,7 +136,6 @@ def get_args():
     parser.add_argument('--imgnt_path',type=str,default='/data/petabyte/IMAGENET/Imagenet2012_for_torchvision',help='path to imagenet dataset')
     parser.add_argument('--model',type=str,help='model architecture')
     parser.add_argument('--batch_size',type=int,default=256)
-    parser.add_argument('--arch',type=str,help='choice of ResNet50, ResNet18, ResNet34, Resnet101, ResNet152')
     parser.add_argument('--lr',type=float,default=0.1,help='learning rate')
     parser.add_argument('--weight_decay',type=float,default=1e-4,help='weight decay to use')
     parser.add_argument('--momentum',type=float,default=0.9,help='momentum to use')
@@ -256,7 +255,7 @@ def validate(model,val_dataset,loss_function):
 def main():
     args = get_args()
     
-    filename = f'train_log--model={args.model},dataset={args.dataset},date={datetime.datetime.now()}'
+    filename = f'torchviz_train_log--model={args.model},dataset={args.dataset},date={datetime.datetime.now()}'
     
     logging.basicConfig(level=logging.INFO,filename=filename)
     
