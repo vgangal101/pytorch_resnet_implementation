@@ -248,7 +248,11 @@ class ResNet18(nn.Module):
   def __init__(self,num_classes=1000):
     super().__init__()
     # conv layer 1
+    # does bias need to be false ??
     self.conv1 = nn.Conv2d(3,64,(7,7),stride=2,padding=3)
+    self.bn1 = nn.BatchNorm2d(64)
+    self.relu1 = nn.ReLU()
+
 
     # conv layer 2x
     self.conv2x_mp = nn.MaxPool2d((3,3),stride=2,padding=1)
@@ -279,6 +283,8 @@ class ResNet18(nn.Module):
   def forward(self,x):
 
     out = self.conv1(x)
+    out = self.bn1(out)
+    out = self.relu1(out)
     #print('conv1x out=',out.shape)
 
     out = self.conv2x_mp(out)
@@ -507,6 +513,8 @@ class ResNet50(nn.Module):
         super().__init__()
         # conv layer 1
         self.conv1 = nn.Conv2d(3,64,(7,7),stride=2,padding=3)
+        self.bn1 = nn.BatchNorm2d(64)
+        self.act1 = nn.Activation('relu')
 
         # conv layer 2x
         self.conv2x_mp = nn.MaxPool2d((3,3),stride=2,padding=1)
@@ -534,7 +542,7 @@ class ResNet50(nn.Module):
         self.conv5x_3 = BottleNeckBlock_Identity(2048,[512,512,2048])
 
         # last layers
-        self.global_avg_pool = nn.AvgPool2d((7,7))
+        self.global_avg_pool = nn.AdaptiveAvgPool2d((1,1))
         self.fc = nn.Linear(2048,num_classes)
         self.act_final = nn.Softmax()
 
@@ -543,12 +551,14 @@ class ResNet50(nn.Module):
 
 
   def forward(self,x):
-        
+
         #print('input type=',type(x))
         #print('input=',x)
         #print('input_shape=',x.shape)
-        
+
         out = self.conv1(x)
+        out = self.bn1(out)
+        out = self.act1(out)
         #print('conv1x out=',out.shape)
 
         out = self.conv2x_mp(out)
@@ -583,7 +593,6 @@ class ResNet50(nn.Module):
 
         out = self.global_avg_pool(out)
         #print('after global avg pool=',out.shape)
-        out = out.reshape(out.shape[0],-1)
         out = self.fc(out)
         #print('after fc=',out.shape)
 
