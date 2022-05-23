@@ -8,9 +8,6 @@ class BottleneckBlock(nn.Module):
         self.input_channels = input_channels
         self.filters = filters
 
-        self.proj_conv = nn.Conv2d(input_channels, filters[2], (1,1), stride=stride, bias=False)
-        self.proj_bn = nn.BatchNorm2d(filters[2])
-
         self.conv1 = nn.Conv2d(input_channels, filters[0], (1,1),stride=stride, bias=False)
         self.bn1 = nn.BatchNorm2d(filters[0])
         self.act1 = nn.ReLU()
@@ -22,11 +19,20 @@ class BottleneckBlock(nn.Module):
         self.conv3 = nn.Conv2d(filters[1],filters[2],(1,1),bias=False)
         self.bn3 = nn.BatchNorm2d(filters[2])
         self.act3 = nn.ReLU()
+        
+        if self.stride == 2 or self.input_channels != self.filters[2]:
+            self.proj_conv = nn.Conv2d(input_channels, filters[2], (1,1), stride=stride, bias=False)
+            self.proj_bn = nn.BatchNorm2d(filters[2])
+            self.proj_conv_shortcut = True
+        else: 
+            self.proj_conv_shortcut = False
+
+        
 
 
     def forward(self,x):
 
-        if self.stride == 2 or self.input_channels != self.filters[2]:
+        if self.proj_conv_shortcut:
             shortcut = self.proj_conv(x)
             shortcut = self.proj_bn(shortcut)
             #print('shortcut shape=',shortcut.shape)
@@ -65,15 +71,20 @@ class ResidualBasicBlock(nn.Module):
         self.bn2 = nn.BatchNorm2d(filters[1])
         self.act2 = nn.ReLU()
 
-        self.proj_conv = nn.Conv2d(input_channels,filters[1],(1,1),stride=stride,bias=False)
-        self.proj_bn = nn.BatchNorm2d(filters[1])
+        if self.stride == 2 or self.input_channels != self.filters[1]:
+            self.proj_conv = nn.Conv2d(input_channels, filters[1], (1,1), stride=stride, bias=False)
+            self.proj_bn = nn.BatchNorm2d(filters[2])
+            self.proj_conv_shortcut = True
+        else: 
+            self.proj_conv_shortcut = False
 
 
     def forward(self,x):
 
-        if self.stride == 2:
+        if self.proj_conv_shortcut:
             shortcut = self.proj_conv(x)
             shortcut = self.proj_bn(shortcut)
+            #print('shortcut shape=',shortcut.shape)
         else:
             shortcut = x
 
@@ -116,7 +127,7 @@ class ResNet18(nn.Module):
 
         self.global_avg_pool = nn.AdaptiveAvgPool2d((1,1))
         self.fc = nn.Linear(512,num_classes)
-        self.act_final = nn.Softmax()
+        
 
     def forward(self,x):
         out = self.conv1(x)
@@ -145,7 +156,6 @@ class ResNet18(nn.Module):
         #print('global avg out',out.shape)
         out = torch.flatten(out,1)
         out = self.fc(out)
-        out = self.act_final(out)
         #print('final output=',out.shape)
         
         return out
@@ -188,8 +198,7 @@ class ResNet34(nn.Module):
 
         self.global_avg_pool = nn.AdaptiveAvgPool2d((1,1))
         self.fc = nn.Linear(512,num_classes)
-        self.act_final = nn.Softmax()
-
+        
     def forward(self,x):
         out = self.conv1(x)
         out = self.bn1(out)
@@ -268,8 +277,7 @@ class ResNet50(nn.Module):
 
         self.global_avg_pool = nn.AdaptiveAvgPool2d((1,1))
         self.fc = nn.Linear(512*4,num_classes)
-        self.act_final = nn.Softmax()
-
+        
     def forward(self,x):
         out = self.conv1(x)
         out = self.bn1(out)
@@ -308,7 +316,6 @@ class ResNet50(nn.Module):
         #print('global avg pool out',out.shape)
         out = torch.flatten(out,1)
         out = self.fc(out)
-        out = self.act_final(out)
         #print('final out',out.shape)
 
         return out
@@ -364,7 +371,7 @@ class ResNet101(nn.Module):
 
         self.global_avg_pool = nn.AdaptiveAvgPool2d((1,1))
         self.fc = nn.Linear(512*4,num_classes)
-        self.act_final = nn.Softmax()
+        #self.act_final = nn.Softmax()
 
     def forward(self,x):
         out = self.conv1(x)
@@ -419,7 +426,7 @@ class ResNet101(nn.Module):
         #print('global pool out',out.shape)
         out = torch.flatten(out,1)
         out = self.fc(out)
-        out = self.act_final(out)
+        #out = self.act_final(out)
         #print('final out',out.shape)
 
         return out
@@ -493,8 +500,7 @@ class ResNet152(nn.Module):
 
         self.global_avg_pool = nn.AdaptiveAvgPool2d((1,1))
         self.fc = nn.Linear(512*4,num_classes)
-        self.act_final = nn.Softmax()
-
+        
 
     def forward(self,x):
         out = self.conv1(x)
@@ -561,7 +567,6 @@ class ResNet152(nn.Module):
         #print('global avg pool out',out.shape)
         out = torch.flatten(out,1)
         out = self.fc(out)
-        out = self.act_final(out)
         #print('final out',out.shape)
 
         return out
