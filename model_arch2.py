@@ -8,9 +8,6 @@ class BottleneckBlock(nn.Module):
         self.input_channels = input_channels
         self.filters = filters
 
-        self.proj_conv = nn.Conv2d(input_channels, filters[2], (1,1), stride=stride, bias=False)
-        self.proj_bn = nn.BatchNorm2d(filters[2])
-
         self.conv1 = nn.Conv2d(input_channels, filters[0], (1,1),stride=stride, bias=False)
         self.bn1 = nn.BatchNorm2d(filters[0])
         self.act1 = nn.ReLU()
@@ -23,15 +20,23 @@ class BottleneckBlock(nn.Module):
         self.bn3 = nn.BatchNorm2d(filters[2])
         self.act3 = nn.ReLU()
         
+        if self.stride == 2 or self.input_channels != self.filters[2]:
+            self.proj_conv = nn.Conv2d(input_channels, filters[2], (1,1), stride=stride, bias=False)
+            self.proj_bn = nn.BatchNorm2d(filters[2])
+            self.proj_conv_shortcut = True
+            
+            nn.init.kaiming_normal_(self.proj_conv.weight, mode='fan_out', nonlinearity='relu')
+            nn.init.constant_(self.proj_bn.weight,1)
+            nn.init.constant_(self.proj_bn.bias,0)
         
-        nn.init.kaiming_normal_(self.proj_conv.weight, mode='fan_out',nonlinearity='relu')
+        else: 
+            self.proj_conv_shortcut = False
+        
         nn.init.kaiming_normal_(self.conv1.weight, mode='fan_out',nonlinearity='relu')
         nn.init.kaiming_normal_(self.conv2.weight, mode='fan_out',nonlinearity='relu')
         nn.init.kaiming_normal_(self.conv3.weight, mode='fan_out', nonlinearity='relu')
         
-        nn.init.constant_(self.proj_bn.weight,1)
-        nn.init.constant_(self.proj_bn.bias,0)
-        
+       
         nn.init.constant_(self.bn1.weight,1)
         nn.init.constant_(self.bn1.bias,0)
         
@@ -40,12 +45,11 @@ class BottleneckBlock(nn.Module):
         
         nn.init.constant_(self.bn3.weight,1)
         nn.init.constant_(self.bn3.bias,0)
-        
 
 
     def forward(self,x):
 
-        if self.stride == 2 or self.input_channels != self.filters[2]:
+        if self.proj_conv_shortcut:
             shortcut = self.proj_conv(x)
             shortcut = self.proj_bn(shortcut)
             #print('shortcut shape=',shortcut.shape)
@@ -84,15 +88,21 @@ class ResidualBasicBlock(nn.Module):
         self.bn2 = nn.BatchNorm2d(filters[1])
         self.act2 = nn.ReLU()
 
-        self.proj_conv = nn.Conv2d(input_channels,filters[1],(1,1),stride=stride,bias=False)
-        self.proj_bn = nn.BatchNorm2d(filters[1])
+        if self.stride == 2 or self.input_channels != self.filters[1]:
+            self.proj_conv = nn.Conv2d(input_channels, filters[1], (1,1), stride=stride, bias=False)
+            self.proj_bn = nn.BatchNorm2d(filters[2])
+            self.proj_conv_shortcut = True
+            
+            nn.init.kaiming_normal_(self.proj_conv.weight, mode='fan_out',nonlinearity='relu')
+            nn.init.constant_(self.proj_bn.weight,1)
+            nn.init.constant_(self.proj_bn.bias,0)
         
-        nn.init.kaiming_normal_(self.proj_conv.weight, mode='fan_out',nonlinearity='relu')
+
+       else: 
+            self.proj_conv_shortcut = False
+
         nn.init.kaiming_normal_(self.conv1.weight, mode='fan_out',nonlinearity='relu')
         nn.init.kaiming_normal_(self.conv2.weight, mode='fan_out',nonlinearity='relu')
-        
-        nn.init.constant_(self.proj_bn.weight,1)
-        nn.init.constant_(self.proj_bn.bias,0)
         
         nn.init.constant_(self.bn1.weight,1)
         nn.init.constant_(self.bn1.bias,0)
@@ -100,14 +110,13 @@ class ResidualBasicBlock(nn.Module):
         nn.init.constant_(self.bn2.weight,1)
         nn.init.constant_(self.bn2.bias,0)
         
-        
-
 
     def forward(self,x):
 
-        if self.stride == 2:
+        if self.proj_conv_shortcut:
             shortcut = self.proj_conv(x)
             shortcut = self.proj_bn(shortcut)
+            #print('shortcut shape=',shortcut.shape)
         else:
             shortcut = x
 
@@ -150,12 +159,11 @@ class ResNet18(nn.Module):
 
         self.global_avg_pool = nn.AdaptiveAvgPool2d((1,1))
         self.fc = nn.Linear(512,num_classes)
-        self.act_final = nn.Softmax()
-        
+       
         nn.init.kaiming_normal_(self.conv1.weight, mode='fan_out',nonlinearity='relu')
         nn.init.constant_(self.bn1.weight,1)
         nn.init.constant_(self.bn1.bias,0)
-        
+       
 
     def forward(self,x):
         out = self.conv1(x)
@@ -184,7 +192,6 @@ class ResNet18(nn.Module):
         #print('global avg out',out.shape)
         out = torch.flatten(out,1)
         out = self.fc(out)
-        out = self.act_final(out)
         #print('final output=',out.shape)
         
         return out
@@ -227,7 +234,11 @@ class ResNet34(nn.Module):
 
         self.global_avg_pool = nn.AdaptiveAvgPool2d((1,1))
         self.fc = nn.Linear(512,num_classes)
-        self.act_final = nn.Softmax()
+        
+        nn.init.kaiming_normal_(self.conv1.weight, mode='fan_out',nonlinearity='relu')
+        nn.init.constant_(self.bn1.weight,1)
+        nn.init.constant_(self.bn1.bias,0)
+       
 
     def forward(self,x):
         out = self.conv1(x)
@@ -307,14 +318,13 @@ class ResNet50(nn.Module):
 
         self.global_avg_pool = nn.AdaptiveAvgPool2d((1,1))
         self.fc = nn.Linear(512*4,num_classes)
-        self.act_final = nn.Softmax()
-        
+       
         nn.init.kaiming_normal_(self.conv1.weight, mode='fan_out',nonlinearity='relu')
         nn.init.constant_(self.bn1.weight,1)
         nn.init.constant_(self.bn1.bias,0)
         
 
-    def forward(self,x):
+   def forward(self,x):
         out = self.conv1(x)
         out = self.bn1(out)
         out = self.relu1(out)
@@ -352,7 +362,6 @@ class ResNet50(nn.Module):
         #print('global avg pool out',out.shape)
         out = torch.flatten(out,1)
         out = self.fc(out)
-        out = self.act_final(out)
         #print('final out',out.shape)
 
         return out
@@ -408,13 +417,11 @@ class ResNet101(nn.Module):
 
         self.global_avg_pool = nn.AdaptiveAvgPool2d((1,1))
         self.fc = nn.Linear(512*4,num_classes)
-        self.act_final = nn.Softmax()
-        
+       
         nn.init.kaiming_normal_(self.conv1.weight, mode='fan_out',nonlinearity='relu')
         nn.init.constant_(self.bn1.weight,1)
         nn.init.constant_(self.bn1.bias,0)
         
-
     def forward(self,x):
         out = self.conv1(x)
         out = self.bn1(out)
@@ -468,7 +475,7 @@ class ResNet101(nn.Module):
         #print('global pool out',out.shape)
         out = torch.flatten(out,1)
         out = self.fc(out)
-        out = self.act_final(out)
+        #out = self.act_final(out)
         #print('final out',out.shape)
 
         return out
@@ -542,12 +549,11 @@ class ResNet152(nn.Module):
 
         self.global_avg_pool = nn.AdaptiveAvgPool2d((1,1))
         self.fc = nn.Linear(512*4,num_classes)
-        self.act_final = nn.Softmax()
-
+       
         nn.init.kaiming_normal_(self.conv1.weight, mode='fan_out',nonlinearity='relu')
         nn.init.constant_(self.bn1.weight,1)
         nn.init.constant_(self.bn1.bias,0)
-        
+       
 
     def forward(self,x):
         out = self.conv1(x)
@@ -614,7 +620,6 @@ class ResNet152(nn.Module):
         #print('global avg pool out',out.shape)
         out = torch.flatten(out,1)
         out = self.fc(out)
-        out = self.act_final(out)
         #print('final out',out.shape)
 
         return out

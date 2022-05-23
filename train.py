@@ -202,7 +202,7 @@ def train(model,train_dataset,optimizer,scheduler,loss_function):
     model.train()
 
     for i,(images, target) in enumerate(train_dataset):
-
+        
         if torch.cuda.is_available():
             images = images.cuda()
             target = target.cuda()
