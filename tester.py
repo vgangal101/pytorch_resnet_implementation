@@ -1,11 +1,18 @@
 import torch 
-from model_arch2 import ResNet18, ResNet34, ResNet50, ResNet101, ResNet152 
+import model_arch2
+import torchvision_resnet
+
+
+#model = model_arch2.ResNet50()
 
 
 
-model = ResNet152()
+model = torchvision_resnet.ResNet50(1000)
 
-input_t = torch.ones(1,3,224,224)
+#input_t = torch.ones(1,3,224,224)
 
-out = model(input_t)
+#out = model(input_t)
+
+print(model)
+
 
