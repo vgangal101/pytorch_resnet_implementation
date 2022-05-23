@@ -9,7 +9,7 @@ from torchvision import datasets
 from torch.utils.data import DataLoader
 from torchvision import transforms
 from metrics_track import AverageMeter, ProgressMeter, accuracy, Summary
-from model_arch import ResNet18, ResNet34, ResNet50, ResNet101, ResNet152
+from model_arch2 import ResNet18, ResNet34, ResNet50, ResNet101, ResNet152
 from torch.optim.lr_scheduler import MultiStepLR
 #from torchvision_resnet import ResNet18, ResNet34, ResNet50, ResNet101, ResNet152
 import matplotlib.pyplot as plt
@@ -105,7 +105,6 @@ def load_cifar10_dataset(args):
     # checkout https://github.com/kuangliu/pytorch-cifar/blob/master/models/resnet.py
 
     transform_train = transforms.Compose([
-    transforms.RandomCrop(32,padding=4),
     transforms.RandomHorizontalFlip(),
     transforms.ToTensor(),
     transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
@@ -130,13 +129,12 @@ def load_cifar10_dataset(args):
 
 
 def get_args():
-    parser = argparse.ArgumentParser(description='script to train ResNets on Imagenet')
+    parser = argparse.ArgumentParser(description='script to train ResNets on Imagenet & cifar10(sanity check)')
     parser.add_argument('--num_epochs',type=int,default=90,help='number of epochs to run')
     parser.add_argument('--dataset',type=str,help='dataset name , cifar10 or Imagenet')
     parser.add_argument('--imgnt_path',type=str,default='/data/petabyte/IMAGENET/Imagenet2012_for_torchvision',help='path to imagenet dataset')
     parser.add_argument('--model',type=str,help='model architecture')
     parser.add_argument('--batch_size',type=int,default=256)
-    parser.add_argument('--arch',type=str,help='choice of ResNet50, ResNet18, ResNet34, Resnet101, ResNet152')
     parser.add_argument('--lr',type=float,default=0.1,help='learning rate')
     parser.add_argument('--weight_decay',type=float,default=1e-4,help='weight decay to use')
     parser.add_argument('--momentum',type=float,default=0.9,help='momentum to use')
