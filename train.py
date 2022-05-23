@@ -9,7 +9,7 @@ from torchvision import datasets
 from torch.utils.data import DataLoader
 from torchvision import transforms
 from metrics_track import AverageMeter, ProgressMeter, accuracy, Summary
-from model_arch import ResNet18, ResNet34, ResNet50, ResNet101, ResNet152
+from model_arch2 import ResNet18, ResNet34, ResNet50, ResNet101, ResNet152
 from torch.optim.lr_scheduler import MultiStepLR
 #from torchvision_resnet import ResNet18, ResNet34, ResNet50, ResNet101, ResNet152
 import matplotlib.pyplot as plt
@@ -204,7 +204,7 @@ def train(model,train_dataset,optimizer,scheduler,loss_function):
     model.train()
 
     for i,(images, target) in enumerate(train_dataset):
-
+        
         if torch.cuda.is_available():
             images = images.cuda()
             target = target.cuda()
