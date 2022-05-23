@@ -22,6 +22,25 @@ class BottleneckBlock(nn.Module):
         self.conv3 = nn.Conv2d(filters[1],filters[2],(1,1),bias=False)
         self.bn3 = nn.BatchNorm2d(filters[2])
         self.act3 = nn.ReLU()
+        
+        
+        nn.init.kaiming_normal_(self.proj_conv.weight, mode='fan_out',nonlinearity='relu')
+        nn.init.kaiming_normal_(self.conv1.weight, mode='fan_out',nonlinearity='relu')
+        nn.init.kaiming_normal_(self.conv2.weight, mode='fan_out',nonlinearity='relu')
+        nn.init.kaiming_normal_(self.conv3.weight, mode='fan_out', nonlinearity='relu')
+        
+        nn.init.constant_(self.proj_bn.weight,1)
+        nn.init.constant_(self.proj_bn.bias,0)
+        
+        nn.init.constant_(self.bn1.weight,1)
+        nn.init.constant_(self.bn1.bias,0)
+        
+        nn.init.constant_(self.bn2.weight,1)
+        nn.init.constant_(self.bn2.bias,0)
+        
+        nn.init.constant_(self.bn3.weight,1)
+        nn.init.constant_(self.bn3.bias,0)
+        
 
 
     def forward(self,x):
@@ -67,6 +86,21 @@ class ResidualBasicBlock(nn.Module):
 
         self.proj_conv = nn.Conv2d(input_channels,filters[1],(1,1),stride=stride,bias=False)
         self.proj_bn = nn.BatchNorm2d(filters[1])
+        
+        nn.init.kaiming_normal_(self.proj_conv.weight, mode='fan_out',nonlinearity='relu')
+        nn.init.kaiming_normal_(self.conv1.weight, mode='fan_out',nonlinearity='relu')
+        nn.init.kaiming_normal_(self.conv2.weight, mode='fan_out',nonlinearity='relu')
+        
+        nn.init.constant_(self.proj_bn.weight,1)
+        nn.init.constant_(self.proj_bn.bias,0)
+        
+        nn.init.constant_(self.bn1.weight,1)
+        nn.init.constant_(self.bn1.bias,0)
+        
+        nn.init.constant_(self.bn2.weight,1)
+        nn.init.constant_(self.bn2.bias,0)
+        
+        
 
 
     def forward(self,x):
@@ -117,6 +151,11 @@ class ResNet18(nn.Module):
         self.global_avg_pool = nn.AdaptiveAvgPool2d((1,1))
         self.fc = nn.Linear(512,num_classes)
         self.act_final = nn.Softmax()
+        
+        nn.init.kaiming_normal_(self.conv1.weight, mode='fan_out',nonlinearity='relu')
+        nn.init.constant_(self.bn1.weight,1)
+        nn.init.constant_(self.bn1.bias,0)
+        
 
     def forward(self,x):
         out = self.conv1(x)
@@ -269,6 +308,11 @@ class ResNet50(nn.Module):
         self.global_avg_pool = nn.AdaptiveAvgPool2d((1,1))
         self.fc = nn.Linear(512*4,num_classes)
         self.act_final = nn.Softmax()
+        
+        nn.init.kaiming_normal_(self.conv1.weight, mode='fan_out',nonlinearity='relu')
+        nn.init.constant_(self.bn1.weight,1)
+        nn.init.constant_(self.bn1.bias,0)
+        
 
     def forward(self,x):
         out = self.conv1(x)
@@ -365,6 +409,11 @@ class ResNet101(nn.Module):
         self.global_avg_pool = nn.AdaptiveAvgPool2d((1,1))
         self.fc = nn.Linear(512*4,num_classes)
         self.act_final = nn.Softmax()
+        
+        nn.init.kaiming_normal_(self.conv1.weight, mode='fan_out',nonlinearity='relu')
+        nn.init.constant_(self.bn1.weight,1)
+        nn.init.constant_(self.bn1.bias,0)
+        
 
     def forward(self,x):
         out = self.conv1(x)
@@ -495,6 +544,10 @@ class ResNet152(nn.Module):
         self.fc = nn.Linear(512*4,num_classes)
         self.act_final = nn.Softmax()
 
+        nn.init.kaiming_normal_(self.conv1.weight, mode='fan_out',nonlinearity='relu')
+        nn.init.constant_(self.bn1.weight,1)
+        nn.init.constant_(self.bn1.bias,0)
+        
 
     def forward(self,x):
         out = self.conv1(x)
