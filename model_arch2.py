@@ -98,7 +98,7 @@ class ResidualBasicBlock(nn.Module):
             nn.init.constant_(self.proj_bn.bias,0)
         
 
-       else: 
+        else: 
             self.proj_conv_shortcut = False
 
         nn.init.kaiming_normal_(self.conv1.weight, mode='fan_out',nonlinearity='relu')
@@ -324,7 +324,7 @@ class ResNet50(nn.Module):
         nn.init.constant_(self.bn1.bias,0)
         
 
-   def forward(self,x):
+    def forward(self,x):
         out = self.conv1(x)
         out = self.bn1(out)
         out = self.relu1(out)
