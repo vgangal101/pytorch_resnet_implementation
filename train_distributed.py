@@ -50,23 +50,49 @@ def plot_graphs(args,track_train_acc,track_val_top1_acc,track_val_top5_acc,track
 
 def get_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('-n', '--nodes', default=1, type=int, metavar='N')
-    parser.add_argument('-g', '--gpus', default=1, type=int,
-                        help='number of gpus per node')
-    parser.add_argument('-nr', '--nr', default=0, type=int,
-                        help='ranking within the nodes')
-    parser.add_argument('--epochs', default=2, type=int, metavar='N',
-                        help='number of total epochs to run')
+
+    parser = argparse.ArgumentParser(description='script to train ResNets on Imagenet & cifar10(sanity check)')
+    parser.add_argument('--num_epochs',type=int,default=90,help='number of epochs to run')
+    parser.add_argument('--dataset',type=str,help='dataset name , cifar10 or Imagenet')
+    parser.add_argument('--imgnt_path',type=str,default='/data/petabyte/IMAGENET/Imagenet2012_for_torchvision',help='path to imagenet dataset')
+    parser.add_argument('--model',type=str,help='model architecture')
+    parser.add_argument('--batch_size',type=int,default=256)
+    parser.add_argument('--lr',type=float,default=0.1,help='learning rate')
+    parser.add_argument('--weight_decay',type=float,default=1e-4,help='weight decay to use')
+    parser.add_argument('--momentum',type=float,default=0.9,help='momentum to use')
+
+    parser.add_argument('--distributed',type=bool,default=True,help='whether to run distributed')
+    parser.add_argument('--nodes', default=1, type=int)
+    #parser.add_argument('--gpus', default=torch.cuda.device_count(), type=int,help='number of gpus per node')
+    parser.add_argument('--node-rank',type=int,default='0')
+
     args = parser.parse_args()
 
-    args.world_size = args.gpus * args.nodes
-    os.environ['MASTER_ADDR'] = '192.168.1.3'
-    os.environ['MASTER_PORT'] = '8888'
-    mp.spawn(train, nprocs=args.gpus, args=(args,))
 
 
 def main_worker():
-    pass
+
+    if args.distributed:
+        args.rank = args.rank * ngpus_per_node + gpu
+        dist.init_process_group(backend=args.dist_backend, init_method=args.dist_url,
+                                world_size=args.world_size, rank=args.rank)
+
+
+    return
+
 
 
 def main():
+    args = get_args()
+
+    if args.distributed:
+        # Since we have ngpus_per_node processes per node, the total world_size
+        # needs to be adjusted accordingly
+        args.world_size = args.nodes * args.gpus
+        # Use torch.multiprocessing.spawn to launch distributed processes: the
+        # main_worker process function
+        mp.spawn(main_worker, nprocs=args.gpus, args=(args.gpus, args))
+    else:
+        # Simply call main_worker function
+        gpu = torch.device('cuda:0')
+        main_worker(gpu, 1, args)
