@@ -7,11 +7,11 @@ import torch
 import torchvision
 from torchvision import datasets
 from torch.utils.data import DataLoader
-import torch.distributed as dist 
+import torch.distributed as dist
 from torchvision import transforms
 
 from metrics_track import AverageMeter, ProgressMeter, accuracy, Summary
-from model_arch2 import ResNet18, ResNet34, ResNet50, ResNet101, ResNet152
+from model_arch_final import ResNet18, ResNet34, ResNet50, ResNet101, ResNet152
 from torch.optim.lr_scheduler import MultiStepLR
 import torch.multiprocessing as mp
 #from torchvision_resnet import ResNet18, ResNet34, ResNet50, ResNet101, ResNet152
@@ -38,8 +38,8 @@ def get_args():
     parser.add_argument('--dist_backend',default='nccl',type=str,help='distributed backend')
     #parser.add_argument('--num_nodes',default=1,type=int,help='number of compute nodes')
     #parser.add_argument('--num_gpus',default=torch.cuda.device_count(),help='number of gpus available')
-    
-    
+
+
     args = parser.parse_args()
     return args
 
@@ -92,7 +92,7 @@ def train(model,train_dataset,optimizer,scheduler,loss_function):
     model.train()
 
     for i,(images, target) in enumerate(train_dataset):
-        
+
         if torch.cuda.is_available():
             images = images.cuda()
             target = target.cuda()
@@ -173,10 +173,10 @@ def load_imagenet_dataset(rank, args):
     val_dataset = datasets.ImageFolder(valdir, val_preprocess)
 
     train_sampler = torch.utils.data.distributed.DistributedSampler(train_dataset)
-    
+
     bs = int(args.batch_size/(args.num_gpus * args.num_nodes))
     print('bs=',bs)
-    
+
 
     # wrap them in DataLoaders
     train_data_loader = DataLoader(train_dataset, batch_size=bs, shuffle=False,num_workers=5,pin_memory=True,sampler=train_sampler)
@@ -207,9 +207,9 @@ def load_cifar10_dataset(rank,args):
 
 
     train_sampler = torch.utils.data.distributed.DistributedSampler(cifar_train_data)
-    
+
     bs = int(args.batch_size/(args.num_gpus * args.num_nodes))
-    
+
     # wrap them in DataLoaders
     train_data_loader = DataLoader(cifar_train_data, batch_size=bs, shuffle=False,num_workers=5,pin_memory=True,sampler=train_sampler)
     val_data_loader = DataLoader(cifar_val_data, batch_size=bs,shuffle=False,num_workers=5,pin_memory=True)
@@ -217,7 +217,7 @@ def load_cifar10_dataset(rank,args):
     cifar_train_dl = DataLoader(cifar_train_data,batch_size=args.batch_size,shuffle=True)
     cifar_val_dl = DataLoader(cifar_val_data,batch_size=args.batch_size,shuffle=True)
 
-    return cifar_train_dl, cifar_val_dl, train_sampler 
+    return cifar_train_dl, cifar_val_dl, train_sampler
 
 
 
@@ -235,15 +235,15 @@ def get_dataset(rank,args):
 
 
 def train_model(rank,world_size,args):
-    
+
     print('rank is=',rank)
     print(f'Using GPU: {rank} for training')
     dist.init_process_group(backend=args.dist_backend, init_method=args.dist_url, world_size= world_size, rank=rank)
-        
+
     if rank == 0:
         filename = f'train_log--model={args.model},dataset={args.dataset},date={datetime.datetime.now()}'
         logging.basicConfig(level=logging.INFO,filename=filename)
-    
+
     num_classes = None
 
     if args.dataset == 'cifar10':
@@ -263,29 +263,29 @@ def train_model(rank,world_size,args):
         model == ResNet152(num_classes=num_classes)
     else:
         raise ValueError('Did not receive a valid model type, recieved=',args.model)
-    
-    # All the necessary distributed code 
-    
-    # set the gpu device number 
+
+    # All the necessary distributed code
+
+    # set the gpu device number
     torch.cuda.set_device(rank)
-    
-    # move the model to the gpu 
+
+    # move the model to the gpu
     model.cuda(rank)
-    
+
     # the batch size to use , total batch size div by workers
     batch_size = int(args.batch_size / world_size)
-    
+
     # wrap model with DistributedDataParallel and use only current rank
     model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[rank])
-    
+
     loss_function = torch.nn.CrossEntropyLoss().cuda()
-    
+
     optimizer = torch.optim.SGD(model.parameters(),lr=args.lr,momentum=args.momentum,weight_decay=args.weight_decay)
-    
+
     scheduler = MultiStepLR(optimizer,milestones=[30,60,80],gamma=0.1)
-    
+
     train_dataset, val_dataset, train_sampler = get_dataset(rank,args)
-    
+
     track_train_loss = []
     track_train_acc = []
     track_val_loss = []
@@ -293,13 +293,13 @@ def train_model(rank,world_size,args):
     track_val_top5_acc = []
 
     num_epochs = args.num_epochs
-    
+
     # write training loop
     print('starting training')
     for epoch in range(num_epochs):
-        
+
         #train_sampler.set_epoch(epoch)
-        
+
         train_loss, train_acc = train(model,train_dataset,optimizer,scheduler,loss_function)
         val_loss, val_top1_acc, val_top5_acc = validate(model,val_dataset,loss_function)
 
@@ -311,7 +311,7 @@ def train_model(rank,world_size,args):
 
         scheduler.step()
         print(f'epoch={epoch} train_loss={train_loss} train_acc={train_acc} val_loss={val_loss} val_top1_acc={val_top1_acc} val_top5_acc={val_top5_acc}')
-        
+
         if rank == 0:
             logging.info(f'epoch={epoch} train_loss={train_loss} train_acc={train_acc} val_loss={val_loss} val_top1_acc={val_top1_acc} val_top5_acc={val_top5_acc}')
 
@@ -324,16 +324,16 @@ def train_model(rank,world_size,args):
         # store checkpoint
         save_file = args.model + '_' + args.dataset + '.pth'
         torch.save(model,save_file)
-    
+
 
 def main():
 
     args = get_args()
     print('num nodes present=',args.num_nodes)
     print('number of gpus on node=',args.num_gpus)
-    
+
     mp.spawn(train_model, nprocs= args.num_nodes * args.num_gpus, args=(args.num_nodes * args.num_gpus, args))
-    
-    
+
+
 if __name__ == '__main__':
     main()
