@@ -36,9 +36,6 @@ def get_args():
     parser.add_argument('--num_gpus',type=int,default=torch.cuda.device_count(),help='number of gpus on a node')
     parser.add_argument('--dist_url',default='tcp://127.0.0.1:50000', type=str, help='url used in distributed training')
     parser.add_argument('--dist_backend',default='nccl',type=str,help='distributed backend')
-    #parser.add_argument('--num_nodes',default=1,type=int,help='number of compute nodes')
-    #parser.add_argument('--num_gpus',default=torch.cuda.device_count(),help='number of gpus available')
-
 
     args = parser.parse_args()
     return args
