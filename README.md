@@ -20,7 +20,7 @@ Overall Statistics:
 
 Graphs:
 ![ResNet18 Epochs vs Loss](figures/loss_graph_imagenet_resnet18_bs256_epochs90.png)
-![ResNet50 Epochs vs Accuracy](figures/accuracy_graph_imagenet_resnet18_bs256_epochs90.png)
+![ResNet18 Epochs vs Accuracy](figures/accuracy_graph_imagenet_resnet18_bs256_epochs90.png)
 
 
 
