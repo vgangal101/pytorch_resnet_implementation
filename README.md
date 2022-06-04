@@ -19,10 +19,9 @@ Overall Statistics:
 - Top 5 Validation Accuracy = 88.91%
 
 Graphs:
+
 ![ResNet18 Epochs vs Loss](figures/loss_graph_imagenet_resnet18_bs256_epochs90.png)
 ![ResNet18 Epochs vs Accuracy](figures/accuracy_graph_imagenet_resnet18_bs256_epochs90.png)
-
-
 
 
 
