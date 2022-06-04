@@ -80,7 +80,10 @@ class BottleneckBlock(nn.Module):
 class ResidualBasicBlock(nn.Module):
     def __init__(self,input_channels,filters,stride=2):
         super().__init__()
+        self.input_channels = input_channels
         self.stride = stride
+        self.filters = filters
+        
         self.conv1 = nn.Conv2d(input_channels,filters[0],(3,3),stride=stride,padding=1,bias=False)
         self.bn1 = nn.BatchNorm2d(filters[0])
         self.act1 = nn.ReLU()
@@ -90,7 +93,7 @@ class ResidualBasicBlock(nn.Module):
 
         if self.stride == 2 or self.input_channels != self.filters[1]:
             self.proj_conv = nn.Conv2d(input_channels, filters[1], (1,1), stride=stride, bias=False)
-            self.proj_bn = nn.BatchNorm2d(filters[2])
+            self.proj_bn = nn.BatchNorm2d(filters[1])
             self.proj_conv_shortcut = True
             
             nn.init.kaiming_normal_(self.proj_conv.weight, mode='fan_out',nonlinearity='relu')
